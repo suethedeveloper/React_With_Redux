@@ -1,78 +1,124 @@
-/** Fetch and Promises */
-//for typescript
-declare var fetch;
-fetch('http://localhost:3010/widgets')
-    .then(res => res.json())
-    .then(results => {console.log(results);})
-    .catch(err => {console.error(err)});
-//window.fetch()
+import { Action, Reducer, createStore, Store, combineReducers, ReducersMapObject } from 'redux';
 
-// /** spread operator */
-// const num = [1,2,3,4,5];
-// const doIt = (a,b,c,d,e) => {
-//     console.log(a,b,c,d,e);
-// }
+enum actionTypes {
+    ADD,
+    SUBTRACT
+}
 
-// doIt(...num);
+interface CalcAction extends  Action {
+    value: number
+}
 
-/** Object / String Destructuring  */
-// const person = {
-//     firstname: "Sue",
-//     lastname: "Lucas"
-// }
+const createAddAction: (value: number) => CalcAction = (value) => ({
+    type: actionTypes.ADD,
+    value
+}); //by doing this ({ }), it returns object? 
 
-// // const {firstname, lastname } = person;
-// const {firstname: fn, lastname: ln } = person;
-// console.log(fn);
-// console.log(ln);
+const createSubtractAction: (value: number) => CalcAction = (value) => ({
+    type: actionTypes.SUBTRACT,
+    value
+});
 
-// const colors = ['red', 'orange', 'blue', 'pink'];
-// const [firstFav, secondFav, ...otherColors] = colors;
-// console.log(firstFav, otherColors);
+interface AppState {
+    sum: number,
+    history: string[]
+}
 
-// const doIt = (a,b,...c) => {
-//     console.log(c);
-// }
+const sumReducer: Reducer<number> = (state: number, action: CalcAction) => {
+     switch(action.type){
+         case actionTypes.ADD:
+            return state + action.value;
+        case actionTypes.SUBTRACT:
+            return state - action.value;
+        default: 
+            return state;
+     }
+}
 
-// doIt(1,3,5,6,7,8);
+const historyReducer: Reducer<string[]> = (state: string[] = [], action: CalcAction) => {
+     switch(action.type){
+         case actionTypes.ADD:
+            return state.concat(`op: add, value: ${action.value}`);
+        case actionTypes.SUBTRACT:
+            return state.concat(`op: subtract, value: ${action.value}`);
+        default: 
+            return state;
+     }
+}
+
+const reducerMap: ReducersMapObject = {
+    sum: sumReducer,
+    history: historyReducer
+};
+
+const appStore: Store<AppState> = createStore<AppState>(combineReducers<AppState>(reducerMap));
+
+appStore.subscribe(()=>{
+    console.log('Action was dispatched, state was reduced');
+    console.log(appStore.getState());
+});
+
+appStore.dispatch(createAddAction(2));
+appStore.dispatch(createSubtractAction(4));
+appStore.dispatch(createAddAction(3));
+appStore.dispatch(createSubtractAction(7));
+appStore.dispatch(createAddAction(1));
 
 
-/** Initializing Params */
-// const doIt = (a, b, c) => {
-//     console.log(a,b,c);
-// }
-// doIt(1,2,3);
-// const doItAgain = (a=1, b=10, c=20) => { //initialize
-//     console.log(a,b,c);
-// }
-// doItAgain();
 
-// const doIt = () => {
-//     console.log('Did it!');
-// }
-// doIt();
 
-// const doItAgain = () => 'Did it again';
-// console.log(doItAgain());
+//-------------------- Basic Info about State -------------------//
+//reducer function
+// const actions = [1,2,3,4,5];
 
-/** Copy Object */
-// const person = {
-//     firstname: "Sue",
-//     lastname: "Lucas"
-// };
 
-// const newPerson = Object.assign({}, person, { age: 16 });
-// console.dir(person);
-// console.dir(newPerson);
-// console.dir(person === newPerson);
+// const actions = [
+//     {type: 'add', val: 1},
+//     {type: 'subtract', val: 2},
+//     {type: 'add', val: 3},
+//     {type: 'subtract', val: 4},
+//     {type: 'add', val: 5}
+// ];
 
-/*--- Don't mutate array! ---*/
+// const finalState = actions.reduce((state, action) => {
+//      console.log(state, action);
+//      switch(action.type){
+//          case 'add':
+//             return state + action.val;
+//         case 'subtract':
+//             return state - action.val;
+//         default: 
+//             return state;
+//      }
+// }, 0); //0 is the initial value
+// // const sum = nums.reduce((prev,cur) => {
+// //      return prev+cur;
+// // });
+// console.log(finalState);
 
-// const colors = ['red', 'orange', 'blue'];
-// var moreColors = colors.concat('yellow');
-// const newColors = colors.slice(1);
+// //it gets tricky if we want to work with an object since when modifying object, it mutates the object
+// //so prevent that issue needs to use Object.assign
+// console.log('---------------');
+// const objFinalState = actions.reduce((state, action) => {
+//      console.log(state, action);
+//      switch(action.type){
+//          case 'add':
+//             return Object.assign({}, state, {sum: state.sum + action.val});
+//         case 'subtract':
+//             return Object.assign({}, state, {sum: state.sum - action.val});
+//         default: 
+//             return state;
+//      }
+// }, {sum: 0});
+// console.log(objFinalState.sum);
 
-// console.dir(colors);
-// console.dir(moreColors);
-// console.dir(newColors);
-//colors.push('pink'); push mutas original array
+//import * as React from 'react'; 
+//react is an old library so {crateElement} from 'react' won't recognize
+//however we can do import {createStore} from 'redux'; redux support three shaking
+
+
+// import * as mod from './mod'; //not the best practice - think about tree shaking
+// //import {newVal, newVal2} from './mod'; 
+
+// console.log(mod.newVal);
+// console.log(mod.newVal2);
